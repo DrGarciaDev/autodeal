@@ -13,6 +13,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // User::factory(10)->create();
+        $this->call(AnioSeeder::class);
+        $this->call(ModeloSeeder::class);
+        $this->call(MarcaSeeder::class);
     }
 }
