@@ -16,19 +16,19 @@ class AnioSeeder extends Seeder
     public function run()
     {
         DB::table('anios')->insert([
-            'anio' => "2018",
+            'nombre' => "2018",
         ]);
         DB::table('anios')->insert([
-            'anio' => "2019",
+            'nombre' => "2019",
         ]);
         DB::table('anios')->insert([
-            'anio' => "2020",
+            'nombre' => "2020",
         ]);
         DB::table('anios')->insert([
-            'anio' => "2021",
+            'nombre' => "2021",
         ]);
         DB::table('anios')->insert([
-            'anio' => "2022",
+            'nombre' => "2022",
         ]);
 
     }

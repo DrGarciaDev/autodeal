@@ -1,0 +1,139 @@
+<?php
+
+namespace App\Clases;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+use Session;
+use Auth;
+use Response;
+
+class BD
+{
+	public static function crear($modelo, $request){
+        // dd(DB::connection()->getDatabaseName())
+		DB::beginTransaction();
+		try {
+			$model 			= 	'App\\Models\\'.$modelo;
+            if (is_array($request)) {
+                $registro 		= 	$model::create($request);
+            }
+            else {
+                $registro 		= 	$model::create($request->all());
+            }
+			DB::commit();
+		} catch(\Illuminate\Database\QueryException $e) {
+            $error_code 	= 	$e->errorInfo[1];
+            DB::rollback();
+
+            // para ver más detalle del error descomentar la siguiente línea
+            return Response::json(['mensaje' => $e->errorInfo, "error" => true], 200);
+
+            $error 			= 	BD::descripcionDelError($error_code);
+
+            if($error != 'No se encontró la descripción del error.' && !env('APP_DEBUG')){
+                return Response::json(['mensaje' => $error, "error" => true], 200);
+            }else{
+                return Response::json(['mensaje' => $e->getMessage(), "error" => true], 200);
+            }
+        }
+
+        return Response::json(['mensaje' => "Registro creado exitosamente.", "id" => $registro->id, "error" => false], 201);
+	}
+
+	public static function actualiza($idActualizar, $modelo, $data){
+		DB::beginTransaction();
+		try {
+			$model 				= 	'App\\Models\\'.$modelo;
+			$registro 			= 	$model::find($idActualizar);
+			$registro->fill($data);
+			$registro->save();
+
+			DB::commit();
+		}catch(\Illuminate\Database\QueryException $e) {
+            $error_code 		= 	$e->errorInfo[1];
+            DB::rollback();
+
+            // para ver más detalle del error descomentar la siguiente línea
+            // return Response::json(['mensaje' => $e->errorInfo, "error" => true], 200);
+
+            $error 				= 	BD::descripcionDelError($error_code);
+            if($error!='No se encontró la descripción del error.'){
+                return Response::json(['mensaje' => $error, "error" => true], 200);
+            }else{
+                return Response::json(['mensaje' => $e->getMessage(), "error" => true], 200);
+            }
+        }
+
+        return Response::json(['mensaje' => "Registro actualizado exitosamente.", "id" => $registro->id, "error" => false], 200);
+	}
+
+	public static function elimina($idEliminar,$modelo){
+		DB::beginTransaction();
+		try {
+			$model 							= 	'App\\Models\\'.$modelo;
+			$registro 						= 	$model::find($idEliminar);
+    		$registro->delete();
+
+			DB::commit();
+		}catch(\Illuminate\Database\QueryException $e) {
+            $error_code 					= 	$e->errorInfo[1];
+            // dd($error_code)
+            DB::rollback();
+
+            if($error_code==1451 || $error_code == -532){
+            	$registro  					= 	$model::find($idEliminar);
+            	$deshabilitado 				=  	'';
+            	if (isset($registro->estatus)) // Si el registro tiene la opcion de deshabilitarse
+            	{
+            		if($registro->estatus == 'Habilitado'){
+                		$registro->estatus 	= 	'Deshabilitado';
+                		$deshabilitado  	= 	'El registro fue deshabilitado.';
+                		$registro->save();
+                	}else{
+                		$registro->estatus 	= 	'Deshabilitado';
+                	}
+                	$registro->save();
+            	}
+            	else
+            	{
+            		// $deshabilitado 			= 	"Change the relations in your system beofre delete this ".$modelo;
+                    $deshabilitado          =   "Cambia las relaciones en tu BD para poder eliminar ".$modelo;
+            	}
+
+                return Response::json(['mensaje' => "El registro no pudo ser eliminado porque <br/>hay información relacionada a el.<br/>".$deshabilitado, "id" => $registro->id, "error" => true], 200);
+            }else{
+            	$error 						= 	BD::descripcionDelError($error_code);
+                if($error!='No se encontró la descripción del error.'){
+                    return Response::json(['mensaje' => $error, "error" => true], 200);
+                }else{
+                    return Response::json(['mensaje' => $e->getMessage(), "error" => true], 200);
+                }
+            }
+
+        }
+
+        return Response::json(['mensaje' => "Registro eliminado exitosamente.", "id" => $registro->id, "error" => false], 200);
+	}
+
+	public static function descripcionDelError($code){
+
+		$error 						= 	'';
+		switch ($code) {
+			case 1062:		$error 	= 	"Houston, ¡Tenemos un registro duplicado!.";	break;
+			case 1451:		$error 	= 	"Houston, ¡No podemos eliminar el registro, hay información relacionada a el!.";	break;
+            case -532:      $error  =   "Houston, IBM DB2 ... ¡No podemos eliminar el registro, hay información relacionada a el!.";    break;
+			case 1452:		$error 	= 	"Houston, ¡Relación no encontrada al insertar o actualizar un registro!.";	break;
+			case 1054:		$error 	= 	"Houston, ¡Columna no encontrada!.";	break;
+
+			case 1654:		$error 	= 	"Houston, ¡Hay un campo que no concuerda con el tipo de dato en la base de datos!.";	break;
+			case 1048:		$error 	= 	"Houston, ¡Hay información que no puede estar vacia en la base de datos!.";	break;
+			case 1054:		$error 	= 	"Houston, ¡Hay un campo que no se identifica en la base de datos!.";	break;
+			case 1166 :		$error 	= 	"Houston, ¡Hay una columna con nombre incorrecto en la base de datos!.";	break;
+			case 1406:		$error 	= 	"Houston, ¡Hay información muy extensa para ser guardada. Revise los campos de información!.";	break;
+			default:		$error 	= 	"No se encontró la descripción del error.";	break;
+		}
+
+		return $error;
+	}
+}
