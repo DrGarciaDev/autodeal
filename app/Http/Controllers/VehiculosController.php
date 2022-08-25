@@ -12,6 +12,16 @@ use App\Models\Anio;
 
 class VehiculosController extends Controller
 {
+    /**
+    * Create a new AuthController instance.
+    *
+    * @return void
+    */
+    public function __construct()
+    {
+        $this->middleware('tokenMiddleware', ['only' => ['create']]);
+    }
+
     public function index()
     {
     	$vehiculos = Vehiculo::orderBy('id', 'DESC')->paginate();
@@ -31,7 +41,6 @@ class VehiculosController extends Controller
 
     public function store(Request $request)
     {
-        // dd($request->input());
     	BD::crear('Vehiculo', $request);
 
     	return redirect()->route('vehiculos.index')->with('info', 'El vehículo fue guardado');

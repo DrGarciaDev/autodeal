@@ -4,13 +4,14 @@
 	<div class="col-sm-8">
 		<h2>
 			Listado de Vehículos
-		<a href="{{ route('vehiculos.create') }}" class="btn btn-primary pull-right">Nuevo</a>
+		<a href="{{ route('vehiculos.create', ['token' => 'kZioVw8IjuGYw6jTBUdiyHc9bB992GC']) }}" class="btn btn-primary pull-right">Nuevo</a>
 		</h2>
 		@include('vehiculos.fragment.info')
 		<table class="table table-hover table-striped">
-			<thead>
+        <caption>Listado</caption>
+            <thead>
 				<tr>
-					<th width="20px">ID</th>
+					<th>ID</th>
 					<th>NOMBRE DEL AUTOMOVIL</th>
 					<th>PRECIO</th>
 					<th>MARCA</th>

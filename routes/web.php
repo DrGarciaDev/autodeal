@@ -15,4 +15,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', 'VehiculosController@index');
 
-Route::resource('/vehiculos', 'VehiculosController');
+Route::group(['prefix' => 'api/service'], function() {
+    Route::resource('/vehiculos', 'VehiculosController');
+});
